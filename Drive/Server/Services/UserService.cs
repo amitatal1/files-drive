@@ -9,8 +9,8 @@ public class UserService
     {
         // Connection to MongoDB
         var client = new MongoClient("mongodb://localhost:27017");
-        var database = client.GetDatabase("myAppDatabase");
-        _users = database.GetCollection<User>("users");
+        var database = client.GetDatabase("Drive");
+        _users = database.GetCollection<User>("Users");
     }
 
     public User GetUser(string username)
