@@ -8,35 +8,17 @@ def login_client(server_ip, server_port):
         # Connect to the server
         client_socket.connect((server_ip, server_port))
         print(f"Connected to server at {server_ip}:{server_port}")
+        response = receive_message(client_socket)
 
         # Enter the login loop
         while True:
-            # Receive message from the server
-            server_message = receive_message(client_socket)
-            print(server_message, end='')  # Display server message without extra newlines
 
-            # Get user input for username or password
-            user_input = input()
+                user_input = input()
+                send_message(client_socket, user_input)
 
-            # Send the input to the server
-            send_message(client_socket, user_input)
+                response = receive_message(client_socket)
+                print(response)
 
-            # If server asks for login again, display the message
-            response = receive_message(client_socket)
-            print(response)
-
-            user_input = input()
-            send_message(client_socket, user_input)
-
-            response = receive_message(client_socket)
-
-
-            # Exit loop if login is successful
-            if "Sign in successful" in response:
-                print("Logged in successfully!")
-                break
-            elif "Invalid credentials" in response:
-                print("Login failed, try again.")
 
     except Exception as e:
         print(f"An error occurred: {e}")

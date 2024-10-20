@@ -1,28 +1,15 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
 
-class Program
+public class Program
 {
-    static TcpListener listener;
-    static UserService userService;
-
-    static void Main(string[] args)
+    private const string IpAddress = "127.0.0.1";
+    private const int Port = 5000;
+    
+    public static void Main(string[] args)
     {
-        userService = new UserService();
-        listener = new TcpListener(IPAddress.Any, 5000);
-        listener.Start();
-        Console.WriteLine("Server started...");
-
-        while (true)
-        {
-            TcpClient client = listener.AcceptTcpClient();
-            Console.WriteLine("Client connected...");
-
-            ClientHandler clientHandler = new ClientHandler(client, userService);
-            Thread clientThread = new Thread(clientHandler.HandleClient);
-            clientThread.Start();
-        }
+        // Start the server
+        Communicator.StartServer(IpAddress, Port);
     }
 }
