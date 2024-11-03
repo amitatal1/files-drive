@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Server.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
@@ -6,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 
-namespace Server.ClientHandler
+namespace Server.Handler
 {
 
     public abstract class ClientHandler
@@ -20,7 +21,13 @@ namespace Server.ClientHandler
             _userService = UserService.Instance;
         }
 
-        public abstract bool ValidateRequest( int code);
+        public abstract bool ValidateRequest(char code);
+        public abstract RequestResult HandleClient(Message msg);
 
+        protected Message GetErrorMessage(string err)
+        {
+            Message msg = new Message((char)ResponseCondition.Failure, err);
+            return msg;          
+        }
     }
 }

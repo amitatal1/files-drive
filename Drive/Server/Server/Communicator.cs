@@ -5,12 +5,15 @@ using System.Net.Sockets;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using Server.Handler;
+using Server.Server;
+using Server.Models;
 
 
 
 public class Communicator
 {
-    private static UserService _userService = UserService.Instance;
+
 
     public static void StartServer(string ipAddress, int port)
     {
@@ -30,11 +33,57 @@ public class Communicator
             Socket clientSocket = serverSocket.Accept();
 
             // Create a new thread to handle each client connection
-            ClientHandler clientHandler = new ClientHandler(clientSocket, _userService);
-            System.Threading.Thread clientThread = new System.Threading.Thread(clientHandler.HandleClient);
-            clientThread.Start();
+            Thread thread = new Thread(() => clientFlow(clientSocket));
+            thread.Start();
         }
     }
 
-}
 
+    public static void clientFlow(Socket clientSocket)
+    {
+        ClientHandler clientHandler = new LoginHandler(clientSocket);
+        while (true)
+        {
+            try
+            {
+                while (true)
+                {
+                    Message message = Helper.ReceiveMessage(clientSocket);
+                    if (clientHandler.ValidateRequest(message.Code))
+                    {
+                        clientHandler.HandleClient(message);
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                CloseSocket(clientSocket);
+                break;
+            }
+
+        }
+    }
+
+
+
+    private static void CloseSocket(Socket socket)
+    {
+        try
+        {
+                // Properly shut down the socket and close it
+                if (socket != null && socket.Connected)
+                {
+                    socket.Shutdown(SocketShutdown.Both);
+                    socket.Close();
+                    Console.WriteLine("Socket closed.");
+                }
+        
+        }
+        catch (SocketException ex)
+        {
+            Console.WriteLine("Exception while closing the socket: " + ex.Message);
+        }
+    }
+}
