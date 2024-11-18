@@ -1,6 +1,7 @@
 ﻿using MongoDB.Driver;
 using System.Collections.Generic;
 
+namespace Services;
 public class UserService
 {
     private readonly IMongoCollection<User> _users;

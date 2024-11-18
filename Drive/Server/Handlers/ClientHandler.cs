@@ -6,6 +6,8 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
+using Services;
+
 
 namespace Server.Handler
 {
@@ -24,10 +26,6 @@ namespace Server.Handler
         public abstract bool ValidateRequest(char code);
         public abstract RequestResult HandleClient(Message msg);
 
-        protected Message GetErrorMessage(string err)
-        {
-            Message msg = new Message((char)ResponseCondition.Failure, err);
-            return msg;          
-        }
+ 
     }
 }

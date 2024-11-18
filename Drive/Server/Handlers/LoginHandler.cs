@@ -4,7 +4,8 @@ using Server.Models;
 using System;
 using System.Net.Sockets;
 using System.Text.Json;
-
+using Services;
+using Server.Server;
 
 namespace Server.Handler
 {
@@ -41,7 +42,7 @@ namespace Server.Handler
                 return new RequestResult
                 {
                     Response = GetErrorMessage("Try again please!"),
-                    NewHandler = null
+                    NewHandler = null,
                 };
             }
 
@@ -50,19 +51,43 @@ namespace Server.Handler
 
         private RequestResult HandleLogin(User user)
         {
+            UserService db = UserService.Instance;            
+            if (db.Authenticate(user.Username, user.Password))
+            {
+                GenericResponse resp = new GenericResponse("Login Succeded");
 
+                return Helper.CreateRequestResult<GenericResponse>(ResponseCondition.Success ,resp,null ); // TO ADD next handler
+            }
+            else
+            {
+                GenericResponse resp = new GenericResponse("Login Failed");
+
+                return Helper.CreateRequestResult<GenericResponse>(ResponseCondition.Success, resp, null);
+
+            }
         }
 
         private RequestResult HandleSignup(User user)
         {
-            
+            UserService db = UserService.Instance;
+            if (db.Authenticate(user.Username, user.Password))
+            {
+                GenericResponse resp = new GenericResponse("Login Succeded");
+
+                return new RequestResult<GenericResponse>(ResponseCondition.Success, resp, null); // TO ADD next handler
+            }
+            else
+            {
+                GenericResponse resp = new GenericResponse("Login Failed");
+
+                return new RequestResult<GenericResponse>(ResponseCondition.Success, resp, null);
+
+            }
         }
 
+        
 
         
 
     }
-
-
-    struct 
 }
