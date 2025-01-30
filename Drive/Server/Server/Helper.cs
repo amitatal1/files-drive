@@ -77,11 +77,6 @@ namespace Server.Server
             return serializedPacket;
         }
 
-        
-        protected RequestResult GetErrorMessage(string err)
-        {
-              msg = new Message((char)ResponseCondition.Failure, err);
-            return msg;
-        }
+
     }
 }

@@ -5,7 +5,7 @@ namespace Services;
 public class UserService
 {
     private readonly IMongoCollection<User> _users;
-    private static readonly object _lock = new object(); 
+    private static readonly object _lock = new object();
 
     private static readonly UserService _instance = new UserService();
 
@@ -26,35 +26,40 @@ public class UserService
 
     public User GetUser(string username)
     {
-        lock (_lock)
+
+        return _users.Find(user => user.Username == username).FirstOrDefault();
+
+    }
+
+    public bool AddUser(string username, string password)
+    {
+        try
         {
-            return _users.Find(user => user.Username == username).FirstOrDefault();
+            User newUser = new User { Username = username, Password = password };
+            _users.InsertOne(newUser);
+            return true; // Return true if insertion was successful
+        }
+
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Unexpected Error: {ex.Message}");
+            return false;
         }
     }
 
-    public void AddUser(string username, string password)
-    {
-        lock (_lock)
-        {
-            var newUser = new User { Username = username, Password = password };
-            _users.InsertOne(newUser);
-        }
-    }
 
     public bool Authenticate(string username, string password)
     {
-        lock (_lock)
-        {
-            var user = GetUser(username);
-            return user != null && user.Password == password;
-        }
+
+        var user = GetUser(username);
+        return user != null && user.Password == password;
+
     }
 
     public List<User> GetAllUsers()
     {
-        lock (_lock)
-        {
-            return _users.Find(user => true).ToList();
-        }
+
+        return _users.Find(user => true).ToList();
+
     }
 }

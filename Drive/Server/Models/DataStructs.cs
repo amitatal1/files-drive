@@ -5,8 +5,6 @@ using MongoDB.Bson.Serialization.Attributes;
 
 public class User
 {
-    [BsonId]
-    public ObjectId Id { get; set; }
 
     [BsonElement("username")]
     public string Username { get; set; }
@@ -24,3 +22,4 @@ public class GenericResponse
 
     public string Message;
 }
+

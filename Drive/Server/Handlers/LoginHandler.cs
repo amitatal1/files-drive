@@ -22,7 +22,6 @@ namespace Server.Handler
 
         public override RequestResult HandleClient(Message msg)
         {
-
             try
             {
                 User user = JsonSerializer.Deserialize<User>((msg.Data.ToString()));
@@ -35,15 +34,17 @@ namespace Server.Handler
                     return HandleSignup(user);
 
                 }
+                else
+                {
+                    GenericResponse resp = new GenericResponse("Try again please.");
+                    return Helper.CreateRequestResult<GenericResponse>(ResponseCondition.Success, resp, null);
+                }
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
-                return new RequestResult
-                {
-                    Response = GetErrorMessage("Try again please!"),
-                    NewHandler = null,
-                };
+                GenericResponse resp = new GenericResponse("Try again please.");
+                return Helper.CreateRequestResult<GenericResponse>(ResponseCondition.Success, resp, null);
             }
 
 
@@ -51,18 +52,18 @@ namespace Server.Handler
 
         private RequestResult HandleLogin(User user)
         {
-            UserService db = UserService.Instance;            
+            UserService db = UserService.Instance;
             if (db.Authenticate(user.Username, user.Password))
             {
                 GenericResponse resp = new GenericResponse("Login Succeded");
 
-                return Helper.CreateRequestResult<GenericResponse>(ResponseCondition.Success ,resp,null ); // TO ADD next handler
+                return Helper.CreateRequestResult<GenericResponse>(ResponseCondition.Success, resp, null); // TO ADD next handler
             }
             else
             {
                 GenericResponse resp = new GenericResponse("Login Failed");
 
-                return Helper.CreateRequestResult<GenericResponse>(ResponseCondition.Success, resp, null);
+                return Helper.CreateRequestResult<GenericResponse>(ResponseCondition.Failure, resp, null);
 
             }
         }
@@ -70,24 +71,24 @@ namespace Server.Handler
         private RequestResult HandleSignup(User user)
         {
             UserService db = UserService.Instance;
-            if (db.Authenticate(user.Username, user.Password))
+            if (db.AddUser(user.Username, user.Password))
             {
                 GenericResponse resp = new GenericResponse("Login Succeded");
 
-                return new RequestResult<GenericResponse>(ResponseCondition.Success, resp, null); // TO ADD next handler
+                return Helper.CreateRequestResult<GenericResponse>(ResponseCondition.Success, resp, null); // TO ADD next handler
             }
             else
             {
                 GenericResponse resp = new GenericResponse("Login Failed");
-
-                return new RequestResult<GenericResponse>(ResponseCondition.Success, resp, null);
+                return Helper.CreateRequestResult<GenericResponse>(ResponseCondition.Failure, resp, null);
 
             }
         }
 
-        
 
-        
+
+
 
     }
+
 }
