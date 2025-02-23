@@ -42,6 +42,11 @@ namespace Server.Services
             return true;
         }
 
+
+        public FileRecord GetFileRecord(string filename)
+        {
+             return _files.Find(x => x.FileName == filename).FirstOrDefault();
+        }
         public byte[] GetFileContent(string filename)
         {
             // Retrieve the file metadata from MongoDB
@@ -54,31 +59,49 @@ namespace Server.Services
             return null;
         }
 
-        public bool ShareFile(string filename, string shareType, string sharedUser)
+        public async Task<bool> ShareFileAsync(string filename, string shareType, List<string> sharedUsers)
         {
-            // Find the file in the database
-            var fileRecord = _files.Find(f => f.FileName == filename).FirstOrDefault();
-            if (fileRecord != null)
+            var fileRecord = await _files.Find(f => f.FileName == filename).FirstOrDefaultAsync();
+            if (fileRecord == null)
             {
-                // Add the shared user to the appropriate permissions list
-                if (shareType == "view" && !fileRecord.ViewPermissions.Contains(sharedUser))
-                {
-                    fileRecord.ViewPermissions.Add(sharedUser);
-                }
-                else if (shareType == "edit" && !fileRecord.EditPermissions.Contains(sharedUser))
-                {
-                    fileRecord.EditPermissions.Add(sharedUser);
-                }
-                else
-                {
-                    return false; // User already has permission or invalid shareType
-                }
+                return false; // File not found
+            }
 
-                // Update the file record in MongoDB
-                _files.ReplaceOne(f => f.FileName == filename, fileRecord);
+            bool updated = false;
+
+            foreach (var user in sharedUsers)
+            {
+                if (shareType == "view" && !fileRecord.ViewPermissions.Contains(user))
+                {
+                    fileRecord.ViewPermissions.Add(user);
+                    updated = true;
+                }
+                else if (shareType == "edit" && !fileRecord.EditPermissions.Contains(user))
+                {
+                    fileRecord.EditPermissions.Add(user);
+                    updated = true;
+                }
+            }
+
+            if (updated)
+            {
+                await _files.ReplaceOneAsync(f => f.FileName == filename, fileRecord);
                 return true;
             }
-            return false;
+
+            return false; // No changes were made
+        }
+
+
+        public async Task<List<FileRecord>> GetUserFilesAsync(string username)
+        {
+            var filter = Builders<FileRecord>.Filter.Or(
+                Builders<FileRecord>.Filter.Eq(f => f.Owner, username),
+                Builders<FileRecord>.Filter.AnyEq(f => f.EditPermissions, username),
+                Builders<FileRecord>.Filter.AnyEq(f => f.ViewPermissions, username)
+            );
+
+            return await _files.Find(filter).ToListAsync();
         }
     }
 }

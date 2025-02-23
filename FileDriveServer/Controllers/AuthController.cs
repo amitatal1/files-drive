@@ -9,10 +9,12 @@ namespace Server.Controllers
     public class AuthController : ControllerBase
     {
         private readonly UserService _userService;
+        private readonly JwtService _jwtService;
 
-        public AuthController(UserService userService)
+        public AuthController(UserService userService, JwtService jwtService)
         {
             _userService = userService;
+            _jwtService = jwtService;
         }
 
         [HttpPost("signup")]
@@ -30,7 +32,8 @@ namespace Server.Controllers
         {
             if (_userService.Authenticate(user.Username, user.Password))
             {
-                return Ok(new { Message = "Login successful." });
+                string token = _jwtService.GenerateToken(user.Username);
+                return Ok(new { Message = "Login successful.", Token = token });
             }
             return Unauthorized(new { Message = "Invalid username or password." });
         }
