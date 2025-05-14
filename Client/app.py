@@ -1,6 +1,6 @@
 import tkinter as tk
-from screens import LoginScreen, HomeScreen
-
+from filesscreen import HomeScreen
+from loginscreen import LoginScreen
 class FileSharingApp:
     def __init__(self, root):
         self.root = root
@@ -8,8 +8,8 @@ class FileSharingApp:
         self.root.title("Space Drive")
         self.root.configure(bg="#0A192F")  # Dark background for space theme
 
-        self.user_token = None  # Stores authentication token
-
+        self.user_token = None  
+        self.username = None
         # Initialize screens
         self.login_screen = LoginScreen(root, self)
         self.home_screen = HomeScreen(root, self)
