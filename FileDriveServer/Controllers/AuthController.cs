@@ -20,22 +20,39 @@ namespace Server.Controllers
         [HttpPost("signup")]
         public IActionResult SignUp([FromBody] User user)
         {
-            if (_userService.AddUser(user.Username, user.Password))
+            try
             {
-                return Ok(new { Message = "Signup successful." });
+                if (_userService.AddUser(user.Username, user.Password))
+                {
+                    return Ok(new { Message = "Signup successful." });
+                }
+                return BadRequest(new { Message = "Signup failed. Username may already exist." });
             }
-            return BadRequest(new { Message = "Signup failed. Username may already exist." });
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+          
         }
 
         [HttpPost("login")]
         public IActionResult Login([FromBody] User user)
         {
-            if (_userService.Authenticate(user.Username, user.Password))
+            try
             {
-                string token = _jwtService.GenerateToken(user.Username);
-                return Ok(new { Message = "Login successful.", Token = token });
+                if (_userService.Authenticate(user.Username, user.Password))
+                {
+                    string token = _jwtService.GenerateToken(user.Username);
+                    return Ok(new { Message = "Login successful.", Token = token });
+                }
+                return Unauthorized(new { Message = "Invalid username or password." });
             }
-            return Unauthorized(new { Message = "Invalid username or password." });
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+
+          
         }
     }
 }

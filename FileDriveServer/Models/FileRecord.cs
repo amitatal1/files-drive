@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public class FileRecord
 {
     [BsonId]
+    [BsonRepresentation(BsonType.ObjectId)]
     public ObjectId Id { get; set; }
 
     [BsonElement("filename")]
@@ -22,6 +23,16 @@ public class FileRecord
     [BsonElement("editPermissions")]
     public List<string> EditPermissions { get; set; }
 
-    [BsonElement("lastUpdateTime")]
-    public DateTime LastUpdateTime { get; set; }
+    [BsonElement("lastUpdated")]
+    public DateTime? LastUpdateTime { get; set; }
+
+
+    [BsonElement("encryptedFileKey")]
+    public string EncryptedFileKey { get; set; } // Base64 encoded encrypted file key
+
+    [BsonElement("iv")]
+    public string IV { get; set; } // Base64 encoded Initialization Vector (IV)
+
+    [BsonElement("authTag")]
+    public string AuthTag { get; set; }
 }

@@ -23,6 +23,12 @@ namespace Server.Services
 
         public string GenerateToken(string username)
         {
+
+            Console.WriteLine($"Secret: {_secret}");
+            Console.WriteLine($"Issuer: {_issuer}");
+            Console.WriteLine($"Audience: {_audience}");
+            Console.WriteLine($"ExpiryMinutes: {_expiryMinutes}");
+
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secret));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

@@ -1,0 +1,61 @@
+# Use version 3.8 of the Docker Compose file format
+version: '3.8'
+
+services:
+
+  # Define the MongoDB service
+  mongodb:
+    container_name: mongodb
+    ports:
+   
+      - "27017:27017"
+    volumes:
+      # Persist MongoDB data to a named volume
+      # This ensures your data is not lost when the container is stopped or removed
+      - mongodb_data:/data/db
+    environment:
+      # Optional: Set root username and password for MongoDB (for development)
+      # In production, use a dedicated user with specific database permissions
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+      # Set the database name as used in your C# application
+      - MONGO_INITDB_DATABASE=Drive
+    restart: unless-stopped # Restart the container unless it is explicitly stopped
+
+  # Define the C# application service
+  appserver:
+    build:
+      context: . # Build the image using the Dockerfile in the current directory
+      dockerfile: Dockerfile # Specify the Dockerfile name
+    container_name: fileserver_app # Give the app container a predictable name
+    ports:
+      # Map host port 123 to the container port 123 (as exposed in the Dockerfile)
+      - "123:123"
+    environment:
+      # Pass MongoDB connection string to the C# application
+      # The hostname 'mongodb' matches the service name in this compose file
+      # If you set MONGO_INITDB_ROOT_USERNAME/PASSWORD, include them here
+      - "MongoDB:ConnectionString=mongodb://admin:password@mongodb:27017"
+      - "MongoDB:DatabaseName=Drive"
+      # Include your JWT settings here, either directly or via environment variables
+      - "JwtSettings:Issuer=your_issuer" # Replace with your actual issuer
+      - "JwtSettings:Audience=your_audience" # Replace with your actual audience
+      - "JwtSettings:Secret=your_super_secret_jwt_key_replace_this" # Replace with a strong, secure key
+    depends_on:
+      mongodb:
+        condition: service_healthy # Use service_healthy if MongoDB health check is configured
+        # If no health check, use 'service_started' or 'service_healthy' with a custom healthcheck in mongodb service
+    restart: unless-stopped # Restart the container unless it is explicitly stopped
+
+# Define the named volume for MongoDB data persistence
+volumes:
+  mongodb_data:
+
+# Optional: Add a health check to the MongoDB service for better dependency management
+# Add this block under the 'mongodb:' service definition
+#  healthcheck:
+#    test: echo 'db.runCommand({ping: 1})' | mongosh --quiet
+#    interval: 10s
+#    timeout: 5s
+#    retries: 5
+#    start_period: 60s # Give MongoDB time to initialize
