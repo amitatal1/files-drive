@@ -5,7 +5,8 @@ using Server.Models; // Assuming your FileRecord is in Server.Models
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.AspNetCore.StaticFiles;
-using System.Security.Cryptography; // Added for CryptographicException
+using System.Security.Cryptography;
+using FileDriveServer.Services; // Added for CryptographicException
 
 namespace Server.Services
 {
@@ -222,17 +223,11 @@ namespace Server.Services
             }
             catch (CryptographicException ex)
             {
-                // This specific exception indicates decryption failure (tampering, wrong key, etc.)
-                // Log this as a critical security event. Do NOT expose this detail to the user directly,
-                // but inform them the file is unreadable/corrupted.
                 Console.WriteLine($"CRITICAL: Cryptographic error during decryption for file {fileRecord.Id} (possible tampering or corruption): {ex.Message}");
-                // You might return a specific error code or throw a custom, user-friendly exception
-                // indicating "File corrupted or inaccessible" rather than "Decryption Failed".
                 return null;
             }
             catch (Exception ex)
             {
-                // Log other exceptions (e.g., file not found on disk, invalid Base64 string)
                 Console.WriteLine($"Error retrieving/decrypting file {fileRecord.Id}: {ex.Message}");
                 return null;
             }

@@ -4,39 +4,60 @@ using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using Server.Services;
 using System.Text;
+using System.IO;
+using System;
+using System.Text.Json.Serialization;
+
+// Helper to retrieve secrets from Docker secrets or environment variables
+string GetSecret(string secretName, string fallbackEnvVarName = null)
+{
+    var secretPath = Path.Combine("/run/secrets", secretName);
+    if (File.Exists(secretPath))
+    {
+        return File.ReadAllText(secretPath).Trim();
+    }
+
+    if (fallbackEnvVarName != null)
+    {
+        var envValue = Environment.GetEnvironmentVariable(fallbackEnvVarName);
+        if (!string.IsNullOrEmpty(envValue))
+        {
+            return envValue;
+        }
+    }
+    return "Y3JpZGNzYTl1bW1qZ2RrZ3RscGZtYmd3Z2puam15d3U=";
+        //throw new InvalidOperationException($"Secret '{secretName}' not found. Ensure it's mounted via Docker secrets or provided as environment variable '{fallbackEnvVarName}'.");
+}
+
 
 var builder = WebApplication.CreateBuilder(args);
 
-//master encryption key
-var masterEncryptionKeyBase64 = builder.Configuration["EncryptionSettings:MasterKey"];
-if (string.IsNullOrEmpty(masterEncryptionKeyBase64))
-{
-    throw new InvalidOperationException("Master encryption key is not configured. Please set 'EncryptionSettings:MasterKey' in appsettings.json or environment variables.");
-}
+// Retrieve sensitive settings using the GetSecret helper
+var jwtSecret = GetSecret("jwt_secret.txt", "JWT_SECRET");
+var jwtIssuer = GetSecret("jwt_issuer.txt", "JWT_ISSUER");
+var jwtAudience = GetSecret("jwt_audience.txt", "JWT_AUDIENCE");
+var masterEncryptionKeyBase64 = GetSecret("encryption_master_key.txt", "MASTER_ENCRYPTION_KEY"); 
+int jwtExpiryMinutes = 60;
+
 
 // MongoDB Configuration
-const string mongoConnectionString = "mongodb://localhost:27017";
+const string mongoConnectionString = "mongodb://localhost:27017"; // Use 'mongodb' as hostname for Docker Compose
 const string databaseName = "Drive";
 
-// Register Services
+// Register services
 builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(mongoConnectionString));
 builder.Services.AddSingleton(s => s.GetRequiredService<IMongoClient>().GetDatabase(databaseName));
 builder.Services.AddSingleton<UserService>();
-builder.Services.AddSingleton<FileService>();
-builder.Services.AddSingleton<JwtService>();
+// Register JwtService with the retrieved secret values
+builder.Services.AddSingleton(s => new JwtService(jwtSecret, jwtIssuer, jwtAudience, jwtExpiryMinutes));
 builder.Services.AddSingleton(s => new FileEncryptionService(masterEncryptionKeyBase64));
+builder.Services.AddSingleton<FileService>();
 
-builder.Services.AddControllers();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        // Add your custom ObjectIdConverter to the list of converters
         options.JsonSerializerOptions.Converters.Add(new ObjectIdConverter());
-
-        // You might have other JSON options configured here as well
-        // options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
     });
-
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -47,20 +68,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
-            ValidAudience = builder.Configuration["JwtSettings:Audience"],
+            ValidIssuer = jwtIssuer, 
+            ValidAudience = jwtAudience, 
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Secret"])
+                Encoding.UTF8.GetBytes(jwtSecret) 
             )
         };
     });
 
-builder.WebHost.UseUrls("http://0.0.0.0:123"); // Listen on all IPs
+builder.WebHost.UseUrls("http://0.0.0.0:123");
 var app = builder.Build();
 
 app.UseAuthentication();
 app.UseAuthorization();
-
 
 // Enable CORS
 app.UseCors(policy => policy

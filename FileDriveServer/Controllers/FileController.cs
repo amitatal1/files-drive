@@ -150,8 +150,7 @@ namespace Server.Controllers
             try
             {
                 // Use the service to get file content and details
-                // We need to update the service to return content + filename + content type
-                var fileContentResult = await _fileService.GetFileContentAsync(fileRecord); // Changed to async call
+                var fileContentResult = await _fileService.GetFileContentAsync(fileRecord); 
 
                 if (fileContentResult == null)
                 {

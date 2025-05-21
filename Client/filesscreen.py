@@ -214,7 +214,6 @@ class HomeScreen:
             tk.Label(file_details_window, text="You do not have permissions to view this file.", fg="red", bg="#0A192F").pack(pady=5)
 
 
-    # --- New centralized error handling function ---
     def _handle_api_response(self, response: requests.Response, context_message: str) -> bool:
         """
         Handles common API response status codes and displays appropriate messages.
@@ -240,7 +239,7 @@ class HomeScreen:
             message = f"API Error: Status {response.status_code}\nResponse: {response.text[:200]}..." # Show first 200 chars
 
         if response.status_code == 401:
-            messagebox.showerror("Authentication Error", "Your session has expired. Please log in again.")
+            messagebox.showerror("Authentication Error", f" {context_message} Your session has expired. Please log in again. {message}", )
             self.app.show_login_screen() # Redirect to login screen
         elif response.status_code == 403:
             messagebox.showerror(f"{context_message} - Permission Denied", message)

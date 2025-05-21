@@ -40,7 +40,7 @@ class LoginScreen:
                 else:
                     messagebox.showerror("Login Failed", "Token not received!")
             else:
-                error_message = response.json().get("Message", response.text)
+                error_message = response.text
                 messagebox.showerror("Login Failed", f"Error: {error_message}")
                 print(f"Error: {error_message}")
         except requests.exceptions.RequestException as e:

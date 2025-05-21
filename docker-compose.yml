@@ -1,0 +1,50 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+      - MONGO_INITDB_DATABASE=Drive
+    restart: unless-stopped
+
+  appserver:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fileserver_app
+    ports:
+      - "123:123"
+    environment:
+      - "MongoDB:ConnectionString=mongodb://admin:password@mongodb:27017"
+      - "MongoDB:DatabaseName=Drive"
+    depends_on:
+      mongodb:
+        condition: service_started 
+    restart: unless-stopped
+    secrets:
+      - jwt_secret
+      - jwt_issuer
+      - jwt_audience
+      - encryption_master_key
+
+volumes:
+  mongodb_data:
+
+secrets:
+  jwt_secret:
+    file: ./secrets/jwt_secret.txt 
+  jwt_issuer:
+    file: ./secrets/jwt_issuer.txt
+  jwt_audience:
+    file: ./secrets/jwt_audience.txt
+  encryption_master_key:
+    file: ./secrets/encryption_master_key.txt

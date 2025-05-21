@@ -20,7 +20,7 @@ namespace FileDriveServer.Services
                 _masterEncryptionKey = Convert.FromBase64String(masterKeyBase64);
                 if (_masterEncryptionKey.Length * 8 != AES_KEY_SIZE_BITS)
                 {
-                    throw new ArgumentException($"Master key must be {AES_KEY_SIZE_BITS} bits (32 bytes) when Base64 decoded.", nameofmasterKeyBase64);
+                    throw new ArgumentException($"Master key must be {AES_KEY_SIZE_BITS} bits (32 bytes) when Base64 decoded.");
                 }
             }
             catch (FormatException ex)

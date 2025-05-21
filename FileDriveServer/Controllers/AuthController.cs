@@ -49,7 +49,7 @@ namespace Server.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest("Something failed in the authentication process");
             }
 
           
