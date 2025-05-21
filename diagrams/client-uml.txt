@@ -1,0 +1,90 @@
+@startuml
+skinparam handwritten false
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 12
+
+title Space Drive Client Class Diagram (Key Dependencies)
+
+' External Dependencies (defined as conceptual entities)
+class "tkinter.Tk" as TkRoot <<external>> {
+}
+class "requests.Response" as RequestsResponse <<external>> {
+}
+
+package "Main Application" {
+  class FileSharingApp {
+    +root : TkRoot
+    +user_token : string
+    +username : string
+    - login_screen : LoginScreen
+    - home_screen : HomeScreen
+    --
+    + __init__(root: TkRoot)
+    + show_login_screen() : void
+    + show_home_screen() : void
+  }
+}
+
+package "Screens" {
+  class HomeScreen {
+    +root : TkRoot
+    +app : FileSharingApp
+    +file_list : list
+    +file_list_frame : object ' Represents tkinter.Frame
+    +canvas : object ' Represents tkinter.Canvas
+    +scrollbar : object ' Represents tkinter.Scrollbar
+    +scrollable_frame : object ' Represents tkinter.Frame
+    --
+    + __init__(root: TkRoot, app: FileSharingApp)
+    + show() : void
+    + open_upload_popup() : void
+    + load_files() : void
+    + clear_screen() : void
+    + open_file_details(file_id: string, filename: string) : void
+    + upload_new_version(file_id: string, parent_window: object) : void
+    + edit_permissions(file_id: string, initial_view_users: list, initial_edit_users: list, parent_window: object) : void
+    + _handle_api_response(response: RequestsResponse, context_message: string) : bool
+    + upload_new_file_to_api(file_path: string) : bool
+    + edit_file_on_api(file_id: string, file_path: string) : bool
+    + update_permissions_api(file_id: string, view_users: list, edit_users: list) : bool
+    + download_file_from_api(file_id: string, filename: string) : void
+    + preview_file(file_id: string, filename: string) : void
+  }
+
+  class LoginScreen {
+    +root : TkRoot
+    +app : FileSharingApp
+    +username_entry : object ' Represents tkinter.Entry
+    +password_entry : object ' Represents tkinter.Entry
+    --
+    + __init__(root: TkRoot, app: FileSharingApp)
+    + show() : void
+    + handle_login() : void
+    + handle_signup() : void
+    + clear_screen() : void
+  }
+}
+
+' --- Relationships ---
+
+' FileSharingApp manages instances of LoginScreen and HomeScreen
+FileSharingApp -- LoginScreen : "manages"
+FileSharingApp -- HomeScreen : "manages"
+
+' HomeScreen and LoginScreen both depend on FileSharingApp (via 'app' attribute)
+HomeScreen .> FileSharingApp : "uses 'app'"
+LoginScreen .> FileSharingApp : "uses 'app'"
+
+' Dependencies to core external types
+FileSharingApp .> TkRoot : "uses"
+HomeScreen .> TkRoot : "uses"
+LoginScreen .> TkRoot : "uses"
+
+HomeScreen .> RequestsResponse : "processes API responses"
+LoginScreen .> RequestsResponse : "processes API responses"
+
+' Other external modules like os, webbrowser, json, tempfile, messagebox, filedialog
+' are considered utilities not direct class dependencies and are omitted for brevity.
+@enduml

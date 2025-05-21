@@ -2,7 +2,6 @@
 version: '3.8'
 
 services:
-
   mongodb:
     image: mongo:latest
     container_name: mongodb
@@ -20,6 +19,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: drive:latest
     container_name: fileserver_app
     ports:
       - "123:123"
@@ -30,6 +30,8 @@ services:
       mongodb:
         condition: service_started 
     restart: unless-stopped
+    volumes:
+      - storage:/storage
     secrets:
       - jwt_secret
       - jwt_issuer
@@ -38,7 +40,7 @@ services:
 
 volumes:
   mongodb_data:
-
+  storage:
 secrets:
   jwt_secret:
     file: ./secrets/jwt_secret.txt 

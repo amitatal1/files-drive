@@ -25,8 +25,7 @@ string GetSecret(string secretName, string fallbackEnvVarName = null)
             return envValue;
         }
     }
-    return "Y3JpZGNzYTl1bW1qZ2RrZ3RscGZtYmd3Z2puam15d3U=";
-        //throw new InvalidOperationException($"Secret '{secretName}' not found. Ensure it's mounted via Docker secrets or provided as environment variable '{fallbackEnvVarName}'.");
+    throw new InvalidOperationException($"Secret '{secretName}' not found. Ensure it's mounted via Docker secrets or provided as environment variable '{fallbackEnvVarName}'.");
 }
 
 
@@ -41,7 +40,7 @@ int jwtExpiryMinutes = 60;
 
 
 // MongoDB Configuration
-const string mongoConnectionString = "mongodb://localhost:27017"; // Use 'mongodb' as hostname for Docker Compose
+const string mongoConnectionString = "mongodb://admin:password@mongodb:27017/?authSource=admin"; // Use 'mongodb' as hostname for Docker Compose
 const string databaseName = "Drive";
 
 // Register services
@@ -89,6 +88,5 @@ app.UseCors(policy => policy
     .AllowAnyMethod()
 );
 
-app.UseHttpsRedirection();
-app.MapControllers();
 app.Run();
+app.MapControllers();

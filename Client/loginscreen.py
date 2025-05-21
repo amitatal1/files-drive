@@ -53,7 +53,7 @@ class LoginScreen:
             if response.status_code == 200:
                 messagebox.showinfo("Sign Up", "Account created successfully!")
             else:
-                error_message = response.json().get("errors", response.text)
+                error_message = response.text
                 messagebox.showerror("Sign Up Failed", f"Error: {error_message}")
                 print(f"Error: {error_message}")
         except requests.exceptions.RequestException as e:

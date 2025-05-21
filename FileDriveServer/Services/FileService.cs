@@ -6,7 +6,8 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.AspNetCore.StaticFiles;
 using System.Security.Cryptography;
-using FileDriveServer.Services; // Added for CryptographicException
+using FileDriveServer.Services;
+using System.Runtime.InteropServices; // Added for CryptographicException
 
 namespace Server.Services
 {
@@ -28,9 +29,14 @@ namespace Server.Services
         // Constructor now takes FileEncryptionService
         public FileService(IMongoDatabase database, FileEncryptionService encryptionService)
         {
-            // Define storage path relative to the application's content root
-            _storagePath = Path.Combine(AppContext.BaseDirectory, "FilesDriveStorage");
-            // Ensure storage directory exists
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                _storagePath = Path.Combine(AppContext.BaseDirectory, "storage");
+            }
+            else // if unix
+            {
+                _storagePath = "/storage";
+            }
             Directory.CreateDirectory(_storagePath);
 
             _files = database.GetCollection<FileRecord>("Files");

@@ -1,0 +1,177 @@
+@startuml
+skinparam handwritten true
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 12
+
+title Space Drive Backend Class Diagram (Minimal)
+
+package "Application Entry Point & Configuration" {
+  class Program {
+    +main() : void
+    +GetSecret(string secretName, string fallbackEnvVarName) : string
+  }
+}
+
+package "Controllers" {
+  class AuthController {
+    - UserService _userService
+    - JwtService _jwtService
+    --
+    + AuthController(UserService userService, JwtService jwtService)
+    + SignUp(User user) : IActionResult
+    + Login(User user) : IActionResult
+  }
+
+  class FileController {
+    - FileService _fileService
+    --
+    + FileController(FileService fileService)
+    + UploadFile(IFormFile file) : Task<IActionResult>
+    + EditFile(string fileId, IFormFile file) : Task<IActionResult>
+    + DownloadFile(string fileId) : Task<IActionResult>
+    + ShareFile(string fileId, List<string> editPermissions, List<string> viewPermissions) : Task<IActionResult>
+    + GetUserFiles() : Task<IActionResult>
+    --
+    - getUsername() : string
+  }
+}
+
+package "Services" {
+  class UserService {
+    - IMongoCollection _users
+    --
+    + UserService(IMongoDatabase database)
+    + AddUser(string username, string password) : bool
+    + Authenticate(string username, string password) : bool
+  }
+
+  class JwtService {
+    - string _secret
+    - string _issuer
+    - string _audience
+    - int _expiryMinutes
+    --
+    + JwtService(string secret, string issuer, string audience, int expiryMinutes)
+    + GenerateToken(string username) : string
+  }
+
+  class FileService {
+    - string _storagePath
+    - IMongoCollection _files
+    - FileExtensionContentTypeProvider _contentTypeProvider
+    - FileEncryptionService _encryptionService
+    --
+    + FileService(IMongoDatabase database, FileEncryptionService encryptionService)
+    + SaveFileAsync(IFormFile file, string owner) : Task<bool>
+    + EditFileAsync(IFormFile newFile, FileRecord fileRecord) : Task<bool>
+    + GetFileRecord(string filename, string owner) : FileRecord?
+    + GetFileRecord(ObjectId fileID) : FileRecord?
+    + GetFileContentAsync(FileRecord fileRecord) : Task<FileContentResult?>
+    + ShareFileAsync(FileRecord record, List<string> editPerms, List<string> viewPerms) : Task<bool>
+    + GetUserFilesAsync(string username) : Task<List<FileRecord>>
+  }
+
+  class FileEncryptionService {
+    - byte[] _masterEncryptionKey
+    - {static} const int AES_KEY_SIZE_BITS
+    - {static} const int GCM_TAG_SIZE_BITS
+    - {static} const int GCM_IV_SIZE_BYTES
+    --
+    + FileEncryptionService(string masterKeyBase64)
+    + EncryptFileKey(byte[] fileKey) : byte[]
+    + DecryptFileKey(byte[] combinedEncryptedFileKey) : byte[]
+    + GenerateNewFileKey() : byte[]
+    + EncryptData(byte[] data, byte[] key, out byte[] iv, out byte[] authTag) : byte[]
+    + DecryptData(byte[] cipherBytes, byte[] key, byte[] iv, byte[] authTag) : byte[]
+    --
+    - {static} CombineBytes(byte[] a, byte[] b, byte[] c) : byte[]
+  }
+
+  class ObjectIdConverter {
+    --
+    + Read(Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) : ObjectId
+    + Write(Utf8JsonWriter writer, ObjectId value, JsonSerializerOptions options) : void
+  }
+}
+
+package "Models" {
+  class User {
+    + string? Id
+    + string Username
+    + string Password
+  }
+
+  class FileRecord {
+    + ObjectId Id
+    + string FileName
+    + string SavePath
+    + string Owner
+    + List<string> ViewPermissions
+    + List<string> EditPermissions
+    + DateTime? LastUpdateTime
+    + string EncryptedFileKey
+    + string IV
+    + string AuthTag
+  }
+}
+
+package "Helpers & Data Structures" {
+  class FileContentResult {
+    + byte[] FileData
+    + string FileName
+    + string ContentType
+  }
+}
+
+' --- Relationships ---
+
+' Relationships Among User-Written Classes
+Program ..> AuthController
+Program ..> FileController
+Program ..> UserService
+Program ..> JwtService
+Program ..> FileService
+Program ..> FileEncryptionService
+Program ..> ObjectIdConverter
+
+AuthController -- UserService
+AuthController -- JwtService
+AuthController --> User
+
+FileController -- FileService
+FileController --> FileRecord
+FileController --> User
+FileController ..> IFormFile
+FileController ..> ObjectId
+
+UserService -- User
+UserService ..> IMongoDatabase
+
+JwtService .> System.Text.Encoding
+
+FileService -- FileRecord
+FileService -- FileEncryptionService
+FileService -- FileContentResult
+FileService --> User
+FileService ..> IMongoDatabase
+FileService ..> IFormFile
+FileService ..> ObjectId
+FileService ..> FileExtensionContentTypeProvider
+FileService ..> AppContext
+FileService ..> Path
+FileService ..> Convert
+FileService ..> System.Runtime.InteropServices.RuntimeInformation
+
+FileEncryptionService ..> System.Security.Cryptography.AesGcm
+FileEncryptionService ..> System.Security.Cryptography.RandomNumberGenerator
+
+ObjectIdConverter ..> MongoDB.Bson.ObjectId
+ObjectIdConverter ..> System.Text.Json.Serialization.JsonConverter
+ObjectIdConverter ..> System.Text.Json.Utf8JsonReader
+ObjectIdConverter ..> System.Type
+ObjectIdConverter ..> System.Text.Json.JsonSerializerOptions
+ObjectIdConverter ..> System.Text.Json.Utf8JsonWriter
+
+@enduml

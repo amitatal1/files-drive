@@ -10,7 +10,7 @@ COPY . .
 
 # Change the working directory to your specific project folder
 # This is crucial so dotnet restore/publish runs in the correct context
-WORKDIR /src/FilesDriveServer/
+WORKDIR /src/FileDriveServer/
 
 # Restore dependencies for your specific project
 RUN dotnet restore

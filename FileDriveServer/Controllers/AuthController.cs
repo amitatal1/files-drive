@@ -20,8 +20,10 @@ namespace Server.Controllers
         [HttpPost("signup")]
         public IActionResult SignUp([FromBody] User user)
         {
+            Console.WriteLine("User tried to sign up with values:" + user.ToString());
             try
             {
+                if (user.Username == "" || user.Password == "") { return BadRequest(new { Message = "Please provide all fields." }); }
                 if (_userService.AddUser(user.Username, user.Password))
                 {
                     return Ok(new { Message = "Signup successful." });
@@ -38,6 +40,7 @@ namespace Server.Controllers
         [HttpPost("login")]
         public IActionResult Login([FromBody] User user)
         {
+            Console.WriteLine("User attempted login");
             try
             {
                 if (_userService.Authenticate(user.Username, user.Password))
