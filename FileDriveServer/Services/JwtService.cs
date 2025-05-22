@@ -47,7 +47,7 @@ namespace Server.Services
             // Secrets should not be logged or printed.
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secret));
-            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256); // Using HS256
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256); // Using 
 
             var claims = new[]
             {

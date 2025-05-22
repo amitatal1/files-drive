@@ -25,17 +25,19 @@ string GetSecret(string secretName, string fallbackEnvVarName = null)
             return envValue;
         }
     }
-    throw new InvalidOperationException($"Secret '{secretName}' not found. Ensure it's mounted via Docker secrets or provided as environment variable '{fallbackEnvVarName}'.");
+
+    //return "Y3JpZGNzYTl1bW1qZ2RrZ3RscGZtYmd3Z2puam15d3U=";
+   throw new InvalidOperationException($"Secret '{secretName}' not found. Ensure it's mounted via Docker secrets or provided as environment variable '{fallbackEnvVarName}'.");
 }
 
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Retrieve sensitive settings using the GetSecret helper
-var jwtSecret = GetSecret("jwt_secret.txt", "JWT_SECRET");
-var jwtIssuer = GetSecret("jwt_issuer.txt", "JWT_ISSUER");
-var jwtAudience = GetSecret("jwt_audience.txt", "JWT_AUDIENCE");
-var masterEncryptionKeyBase64 = GetSecret("encryption_master_key.txt", "MASTER_ENCRYPTION_KEY"); 
+var jwtSecret = GetSecret("jwt_secret", "JWT_SECRET");
+var jwtIssuer = GetSecret("jwt_issuer", "JWT_ISSUER");
+var jwtAudience = GetSecret("jwt_audience", "JWT_AUDIENCE");
+var masterEncryptionKeyBase64 = GetSecret("encryption_master_key", "MASTER_ENCRYPTION_KEY"); 
 int jwtExpiryMinutes = 60;
 
 
@@ -88,5 +90,5 @@ app.UseCors(policy => policy
     .AllowAnyMethod()
 );
 
-app.Run();
 app.MapControllers();
+app.Run();
